@@ -6,13 +6,14 @@ export class AuthApi {
     void this.request;
   }
 
-  /** POST /api/signin — успішний логін, повернути SuccessLogin. */
   async signIn(_credentials: UserLogin): Promise<SuccessLogin> {
-    throw new Error('TODO: implement AuthApi.signIn');
+    const response = await this.signInRaw(_credentials);
+    return await response.json();
   }
 
-  /** POST /api/signin — сирий response (для негативних кейсів). */
   async signInRaw(_credentials: UserLogin): Promise<APIResponse> {
-    throw new Error('TODO: implement AuthApi.signInRaw');
+    return await this.request.post('/api/signin', {
+      data: _credentials,
+    });
   }
 }

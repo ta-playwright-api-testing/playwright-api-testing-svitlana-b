@@ -2,14 +2,6 @@ import { test, expect } from '@playwright/test';
 import { AuthApi } from '../../src/api/authApi';
 import { UserProfileApi } from '../../src/api/userProfileApi';
 
-/**
- * TASK 3 — PUT /api/user/{id}
- * Див. README → Завдання 3.
- *
- * beforeEach: логін → зберегти accessToken і userId.
- * Після тесту обов'язково відновіть попередній телефон.
- */
-
 const credentials = {
   email: process.env.USER_EMAIL ?? 'user@example.com',
   password: process.env.USER_PASSWORD ?? 'default_password',
@@ -21,24 +13,40 @@ test.describe('PUT /api/user/{id}', () => {
 
   test.beforeEach(async ({ request }) => {
     const authApi = new AuthApi(request);
-    // TODO: loginViaApi / authApi.signIn → accessToken, userId
-    accessToken = '';
-    userId = 0;
-    void authApi;
-    void credentials;
+    const login = await authApi.signIn(credentials);
+    accessToken = login.accessToken;
+    userId = login.id;
   });
 
-  test.skip('should update phone via PUT and verify via GET', async ({ request }) => {
+  test('should update phone via PUT and verify via GET', async ({ request }) => {
     const userProfileApi = new UserProfileApi(request);
+    const profile = await userProfileApi.getById(accessToken, userId);
+    const originalPhone = profile.phone ?? '';
+    const newPhone = `+38067${String(Date.now()).slice(-7)}`;
 
-    // TODO: GET профіль
-    // TODO: PUT з тими самими email, firstName, lastName, roleName і новим phone
-    // TODO: updateUserProfile() повертає newPhoneNumber
-    // TODO: повторний GET — phone збігається
-    // TODO: restore original phone (finally)
+    const baseProfile = {
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      roleName: profile.roleName,
+      status: profile.status,
+    };
 
-    expect(userProfileApi).toBeDefined();
-    expect(accessToken).toBeDefined();
-    expect(userId).toBeDefined();
+    try {
+      const updatedPhone = await userProfileApi.updateUserProfile(accessToken, userId, {
+        ...baseProfile,
+        phone: newPhone,
+      });
+
+      expect(updatedPhone).toBe(newPhone);
+
+      const afterUpdate = await userProfileApi.getById(accessToken, userId);
+      expect(afterUpdate.phone).toBe(newPhone);
+    } finally {
+      await userProfileApi.updateUserProfile(accessToken, userId, {
+        ...baseProfile,
+        phone: originalPhone,
+      });
+    }
   });
 });

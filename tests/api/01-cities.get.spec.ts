@@ -1,30 +1,36 @@
 import { test, expect } from '@playwright/test';
 import { CitiesApi } from '../../src/api/citiesApi';
 
-/**
- * TASK 1 — GET /api/cities
- * Див. README → Завдання 1.
- *
- * Зніміть test.skip, коли хелпер і асерти готові.
- */
-
 test.describe('GET /api/cities', () => {
-  test.skip('should return a list of cities with expected schema', async ({ request }) => {
+  test('should return a list of cities with expected schema', async ({ request }) => {
     const citiesApi = new CitiesApi(request);
+    const response = await citiesApi.getAllRaw();
 
-    // TODO: викликати getAll / getAllRaw
-    // TODO: статус 200, content-type json, масив з 5 міст
-    // TODO: поля id, name, latitude, longitude
-    // TODO: є Київ з id = 1
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('application/json');
 
-    expect(citiesApi).toBeDefined();
+    const cities = await response.json();
+    expect(cities).toHaveLength(5);
+
+    for (const city of cities) {
+      expect(city).toEqual(
+        expect.objectContaining({
+          id: expect.any(Number),
+          name: expect.any(String),
+          latitude: expect.any(Number),
+          longitude: expect.any(Number),
+        }),
+      );
+    }
+
+    const kyiv = cities.find((city: { id: number }) => city.id === 1);
+    expect(kyiv?.name).toBe('Київ');
   });
 
-  test.skip('should return a city by id', async ({ request }) => {
+  test('should return a city by id', async ({ request }) => {
     const citiesApi = new CitiesApi(request);
 
-    // TODO: GET /api/city/1 → name === 'Київ'
-
-    expect(citiesApi).toBeDefined();
+    const city = await citiesApi.getById(1);
+    expect(city.name).toBe('Київ');
   });
 });

@@ -6,18 +6,17 @@ export class CitiesApi {
     void this.request;
   }
 
-  /** GET /api/cities — повернути масив міст. */
   async getAll(): Promise<City[]> {
-    throw new Error('TODO: implement CitiesApi.getAll');
+    const response = await this.getAllRaw();
+    return await response.json();
   }
 
-  /** GET /api/city/{id} — одне місто. */
   async getById(_id: number): Promise<City> {
-    throw new Error('TODO: implement CitiesApi.getById');
+    const response = await this.request.get(`/api/city/${_id}`);
+    return await response.json();
   }
 
-  /** Сирий response, якщо потрібен статус / headers. */
   async getAllRaw(): Promise<APIResponse> {
-    throw new Error('TODO: implement CitiesApi.getAllRaw');
+    return await this.request.get('/api/cities');
   }
 }
